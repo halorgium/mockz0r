@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+rm $1/lib/$2
+echo "removed"
