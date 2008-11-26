@@ -5,8 +5,8 @@ class MysqlServer
   class DbAlreadyExists < Error; end
   class DbNonExistant < Error; end
 
-  def install_on(slice)
-    case slice.run("bin/mysql_install #{MOUNT_POINT}")
+  def install
+    case System.run("bin/mysql_install #{MOUNT_POINT}")
     when "installed"
       true
     when "already installed"
@@ -16,21 +16,21 @@ class MysqlServer
     end
   end
 
-  def installed_on?(slice)
-    databases_on(slice).include?("mysql")
+  def installed?
+    databases.include?("mysql")
   end
 
-  def list_on(slice)
-    slice.run "bin/mysql_list #{MOUNT_POINT}"
+  def list
+    System.run "bin/mysql_list #{MOUNT_POINT}"
   end
 
-  def databases_on(slice)
-    list_on(slice).split(/\n/)
+  def databases
+    list.split(/\n/)
   end
 
-  def create_db_on(name, slice)
-    raise NotInstalled, "mysql is not installed" unless installed_on?(slice)
-    case slice.run("bin/mysql_create #{MOUNT_POINT} #{name}")
+  def create_db(name)
+    raise NotInstalled, "mysql is not installed" unless installed?
+    case System.run("bin/mysql_create #{MOUNT_POINT} #{name}")
     when "created"
       true
     when "db already exists"
@@ -40,9 +40,9 @@ class MysqlServer
     end
   end
 
-  def remove_db_on(name, slice)
-    raise NotInstalled, "mysql is not installed" unless installed_on?(slice)
-    case slice.run("bin/mysql_rm #{MOUNT_POINT} #{name}")
+  def remove_db(name)
+    raise NotInstalled, "mysql is not installed" unless installed?
+    case System.run("bin/mysql_rm #{MOUNT_POINT} #{name}")
     when "removed"
       true
     when "db non-existant"
