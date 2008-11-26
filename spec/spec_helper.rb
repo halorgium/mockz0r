@@ -1,3 +1,6 @@
+require 'rubygems'
+require 'spec'
+
 require File.dirname(__FILE__) + '/../lib/slice'
 require File.dirname(__FILE__) + '/../lib/mysql_server'
 

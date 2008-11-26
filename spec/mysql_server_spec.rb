@@ -1,4 +1,5 @@
 MOUNT_POINT = File.expand_path(File.dirname(__FILE__) + '/../mount')
+require File.dirname(__FILE__) + '/spec_helper'
 require 'fileutils'
 
 describe "A mysql server" do
@@ -44,12 +45,13 @@ describe "A mysql server" do
   describe "removing a database" do
     before(:each) do
       @m.install_on(@s)
-      @m.remove_db_on("mysql", @s)
+      @m.create_db_on("test", @s)
+      @m.remove_db_on("test", @s)
     end
 
     it "does not have the database anymore" do
       output = @m.list_on(@s)
-      output.should == ""
+      output.should == "mysql"
     end
   end
 end
