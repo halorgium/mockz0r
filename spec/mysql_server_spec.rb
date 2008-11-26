@@ -31,14 +31,23 @@ describe "A mysql server" do
   end
 
   describe "creating a database" do
-    before(:each) do
-      @m.install_on(@s)
-      @m.create_db_on("test", @s)
+    describe "when the server is installed" do
+      before(:each) do
+        @m.install_on(@s)
+        @m.create_db_on("test", @s)
+      end
+
+      it "has the new database" do
+        output = @m.list_on(@s)
+        output.should == "mysql\ntest"
+      end
     end
 
-    it "has the new database" do
-      output = @m.list_on(@s)
-      output.should == "mysql\ntest"
+    describe "when the server is not installed" do
+      it "raises an error" do
+        lambda { @m.create_db_on("test", @s) }.
+          should raise_error(MysqlServer::NotInstalled)
+      end
     end
   end
 

@@ -54,7 +54,7 @@ class MockSlice
     end
 
     def list(command)
-      @mysql_dbs.join("\n")
+      @mysql_dbs.join(" ")
     end
 
     def create(command)
