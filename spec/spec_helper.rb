@@ -1,3 +1,5 @@
+MOUNT_POINT = File.expand_path(File.dirname(__FILE__) + '/../mount') unless Object.const_defined?(:MOUNT_POINT)
+
 require 'rubygems'
 require 'spec'
 

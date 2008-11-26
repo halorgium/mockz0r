@@ -1,4 +1,3 @@
-MOUNT_POINT = File.expand_path(File.dirname(__FILE__) + '/../mount')
 require File.dirname(__FILE__) + '/spec_helper'
 require 'fileutils'
 
@@ -13,13 +12,30 @@ describe "A mysql server" do
   end
 
   describe "being installed" do
-    before(:each) do
-      @m.install_on(@s)
+    describe "on a fresh machine" do
+      before(:each) do
+        @result = @m.install_on(@s)
+      end
+
+      it "succeeds" do
+        @result.should be_true
+      end
+
+      it "installs the mysql database" do
+        output = @m.list_on(@s)
+        output.should == "mysql"
+      end
     end
 
-    it "installs the mysql database" do
-      output = @m.list_on(@s)
-      output.should == "mysql"
+    describe "on a machine with it already installed" do
+      before(:each) do
+        @m.install_on(@s)
+      end
+
+      it "raises an error" do
+        lambda { @m.install_on(@s) }.
+          should raise_error(MysqlServer::AlreadyInstalled, /already installed/)
+      end
     end
   end
 
@@ -32,35 +48,79 @@ describe "A mysql server" do
 
   describe "creating a database" do
     describe "when the server is installed" do
-      before(:each) do
-        @m.install_on(@s)
-        @m.create_db_on("test", @s)
+      describe "when the database has not been created" do
+        before(:each) do
+          @m.install_on(@s)
+          @result = @m.create_db_on("test", @s)
+        end
+
+        it "succeeds" do
+          @result.should be_true
+        end
+
+        it "has the new database" do
+          output = @m.list_on(@s)
+          output.should == "mysql\ntest"
+        end
       end
 
-      it "has the new database" do
-        output = @m.list_on(@s)
-        output.should == "mysql\ntest"
+      describe "when the database has been created" do
+        before(:each) do
+          @m.install_on(@s)
+          @m.create_db_on("test", @s)
+        end
+
+        it "raises an error" do
+        lambda { @m.create_db_on("test", @s) }.
+          should raise_error(MysqlServer::DbAlreadyExists, /already exists/)
+        end
       end
     end
 
     describe "when the server is not installed" do
       it "raises an error" do
         lambda { @m.create_db_on("test", @s) }.
-          should raise_error(MysqlServer::NotInstalled)
+          should raise_error(MysqlServer::NotInstalled, /not installed/)
       end
     end
   end
 
   describe "removing a database" do
-    before(:each) do
-      @m.install_on(@s)
-      @m.create_db_on("test", @s)
-      @m.remove_db_on("test", @s)
+    describe "when the server is installed" do
+      describe "when the database has been created" do
+        before(:each) do
+          @m.install_on(@s)
+          @m.create_db_on("test", @s)
+          @result = @m.remove_db_on("test", @s)
+        end
+
+        it "succeeds" do
+          @result.should be_true
+        end
+
+        it "does not have the database anymore" do
+          output = @m.list_on(@s)
+          output.should == "mysql"
+        end
+      end
+
+      describe "when the database has not been created" do
+        before(:each) do
+          @m.install_on(@s)
+        end
+
+        it "raises an error" do
+          lambda { @m.remove_db_on("test", @s) }.
+            should raise_error(MysqlServer::DbNonExistant, /non-existant/)
+        end
+      end
     end
 
-    it "does not have the database anymore" do
-      output = @m.list_on(@s)
-      output.should == "mysql"
+    describe "when the server is not installed" do
+      it "raises an error" do
+        lambda { @m.remove_db_on("test", @s) }.
+          should raise_error(MysqlServer::NotInstalled, /not installed/)
+      end
     end
   end
 end

@@ -17,6 +17,9 @@ class MysqlServerMock
   end
 
   def install(command)
+    if @databases.include?("mysql")
+      return "already installed"
+    end
     @databases = ["mysql"]
     "installed"
   end
@@ -27,8 +30,13 @@ class MysqlServerMock
 
   def create(command)
     if command =~ /mysql_create [^ ]+ (\w+)$/
-      @databases << $1
-      "created"
+      name = $1
+      if @databases.include?(name)
+        "db already exists"
+      else
+        @databases << $1
+        "created"
+      end
     else
       "FAILED"
     end
@@ -36,8 +44,13 @@ class MysqlServerMock
 
   def remove(command)
     if command =~ /mysql_rm [^ ]+ (\w+)$/
-      @databases.delete($1)
-      "removed"
+      name = $1
+      unless @databases.include?(name)
+        "db non-existant"
+      else
+        @databases.delete($1)
+        "removed"
+      end
     else
       "FAILED"
     end

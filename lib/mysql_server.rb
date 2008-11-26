@@ -1,10 +1,18 @@
 class MysqlServer
   class Error < StandardError; end
   class NotInstalled < Error; end
+  class AlreadyInstalled < Error; end
+  class DbAlreadyExists < Error; end
+  class DbNonExistant < Error; end
 
   def install_on(slice)
-    unless slice.run("bin/mysql_install #{MOUNT_POINT}") == "installed"
-      raise "Failed to install"
+    case slice.run("bin/mysql_install #{MOUNT_POINT}")
+    when "installed"
+      true
+    when "already installed"
+      raise AlreadyInstalled, "mysql is already installed"
+    else
+      raise Error
     end
   end
 
@@ -22,15 +30,25 @@ class MysqlServer
 
   def create_db_on(name, slice)
     raise NotInstalled, "mysql is not installed" unless installed_on?(slice)
-    unless slice.run("bin/mysql_create #{MOUNT_POINT} #{name}") == "created"
-      raise "Failed to create"
+    case slice.run("bin/mysql_create #{MOUNT_POINT} #{name}")
+    when "created"
+      true
+    when "db already exists"
+      raise DbAlreadyExists, "db already exists"
+    else
+      raise Error
     end
   end
 
   def remove_db_on(name, slice)
     raise NotInstalled, "mysql is not installed" unless installed_on?(slice)
-    unless slice.run("bin/mysql_rm #{MOUNT_POINT} #{name}") == "removed"
-      raise "Failed to remove"
+    case slice.run("bin/mysql_rm #{MOUNT_POINT} #{name}")
+    when "removed"
+      true
+    when "db non-existant"
+      raise DbNonExistant, "db non-existant"
+    else
+      raise Error
     end
   end
 end
